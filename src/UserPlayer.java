@@ -1,22 +1,22 @@
 class UserPlayer implements Player {
     private Reader reader = new Reader();
-    private Piece piece;
+    private Chip piece;
 
-    UserPlayer(Piece piece) {
+    UserPlayer(Chip piece) {
         this.piece = piece;
     }
 
     public void move(Board board) {
         int column = reader.getUserInput("Please select a column for " + piece);
         if (board.availableMoves().contains(column)) {
-            board.placePiece(column, piece);
+            board.placePiece(column);
         } else {
             System.out.println("Wrong column");
             move(board);
         }
     }
 
-    public Piece getPiece() {
+    public Chip getPiece() {
         return piece;
     }
 

@@ -3,9 +3,9 @@ import java.util.Random;
 class DummyPlayer implements Player {
 
     private Random random = new Random();
-    private Piece piece;
+    private Chip piece;
 
-    DummyPlayer(Piece piece) {
+    DummyPlayer(Chip piece) {
         this.piece = piece;
     }
 
@@ -13,7 +13,7 @@ class DummyPlayer implements Player {
     public void move(Board board) {
         int column = getRandomColumn(board.getCOLUMNS());
         if (board.availableMoves().contains(column)) {
-            board.placePiece(column, piece);
+            board.placePiece(column);
         } else {
             move(board);
         }
@@ -24,7 +24,7 @@ class DummyPlayer implements Player {
     }
 
     @Override
-    public Piece getPiece() {
+    public Chip getPiece() {
         return piece;
     }
 

@@ -1,19 +1,39 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
+import java.util.HashSet;
 
-class Board {
+class Board implements Serializable {
     private final int ROWS = 6;
     private final int COLUMNS = 7;
 
-    private Piece[][] board;
+    private Chip[][] board;
+
+    private Chip playersTurn;
+    private Chip winner;
+    private HashSet<Integer> movesAvailable;
+
+    private boolean gameOver;
 
     Board() {
-        board = new Piece[ROWS][COLUMNS];
+        board = new Chip[ROWS][COLUMNS];
+        movesAvailable = new HashSet<>();
+        reset();
+    }
+
+    private void reset() {
+        gameOver = false;
+        playersTurn = Chip.X;
+        winner = Chip.Blank;
+        initialize();
+    }
+
+    private void initialize() {
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLUMNS; j++) {
-                board[i][j] = new Piece();
+                board[i][j] = Chip.Blank;
             }
         }
+        movesAvailable.clear();
+        movesAvailable = availableMoves();
     }
 
     int getCOLUMNS() {
@@ -24,7 +44,11 @@ class Board {
         printNumbers();
         for (int i = 0; i < ROWS; i++) {
             for (int j = 0; j < COLUMNS; j++) {
-                System.out.print(board[i][j] + " ");
+                if (board[i][j] == Chip.Blank) {
+                    System.out.print("* ");
+                } else {
+                    System.out.print(board[i][j].name() + " ");
+                }
             }
             System.out.println();
         }
@@ -38,29 +62,46 @@ class Board {
         System.out.println();
     }
 
-    void placePiece(int column, Piece piece) {
+    void placePiece(int column) {
         for (int i = ROWS - 1; i >= 0; i--) {
-            if (board[i][column - 1].isEmpty()) {
-                board[i][column - 1] = piece;
+            if (board[i][column - 1] == Chip.Blank) {
+                board[i][column - 1] = playersTurn;
                 break;
             }
         }
+        movesAvailable.clear();
+        movesAvailable = availableMoves();
+
+        if (movesAvailable.isEmpty()) {
+            gameOver = true;
+        }
+        check();
+        playersTurn = (playersTurn == Chip.X) ? Chip.O : Chip.X;
     }
 
-    boolean check(Piece piece) {
-        return checkHorizontal(piece) || checkVertical(piece) || checkDiagonalUp(piece) || checkDiagonalDown(piece);
+    Chip getTurn() {
+        return playersTurn;
     }
 
-    private boolean checkHorizontal(Piece piece) {
-        int counter = 0;
+    private boolean check() {
+        return checkHorizontal() ||
+                checkVertical() ||
+                checkDiagonalUp() ||
+                checkDiagonalDown();
+    }
+
+    private boolean checkHorizontal() {
         for (int i = 0; i < ROWS; i++) {
+            int counter = 0;
             for (int j = 0; j < COLUMNS; j++) {
-                if (board[i][j].equals(piece)) {
+                if (board[i][j] == playersTurn) {
                     counter++;
                 } else {
                     counter = 0;
                 }
                 if (counter == 4) {
+                    winner = playersTurn;
+                    gameOver = true;
                     return true;
                 }
             }
@@ -68,16 +109,18 @@ class Board {
         return false;
     }
 
-    private boolean checkVertical(Piece piece) {
-        int counter = 0;
+    private boolean checkVertical() {
         for (int j = 0; j < COLUMNS; j++) {
+            int counter = 0;
             for (int i = 0; i < ROWS; i++) {
-                if (board[i][j].equals(piece)) {
+                if (board[i][j] == playersTurn) {
                     counter++;
                 } else {
                     counter = 0;
                 }
                 if (counter == 4) {
+                    winner = playersTurn;
+                    gameOver = true;
                     return true;
                 }
             }
@@ -85,23 +128,28 @@ class Board {
         return false;
     }
 
-    private boolean checkDiagonalUp(Piece piece) {
+    private boolean checkDiagonalUp() {
         for (int i = 3; i < ROWS; i++) {
             for (int j = 0; j < COLUMNS - 3; j++) {
-                if (board[i][j].equals(piece))
-                    if (checkDiagonalUpStep2(i, j, piece)) {
+                if (board[i][j] == playersTurn) {
+                    if (checkDiagonalUpStep2(i, j)) {
+                        winner = playersTurn;
+                        gameOver = true;
                         return true;
                     }
+                }
             }
         }
         return false;
     }
 
-    private boolean checkDiagonalDown(Piece piece) {
+    private boolean checkDiagonalDown() {
         for (int i = 0; i < ROWS - 3; i++) {
             for (int j = 0; j < COLUMNS - 3; j++) {
-                if (board[i][j].equals(piece))
-                    if (checkDiagonalDownStep2(i, j, piece)) {
+                if (board[i][j] == playersTurn)
+                    if (checkDiagonalDownStep2(i, j)) {
+                        winner = playersTurn;
+                        gameOver = true;
                         return true;
                     }
             }
@@ -109,12 +157,12 @@ class Board {
         return false;
     }
 
-    private boolean checkDiagonalUpStep2(int row, int column, Piece piece) {
+    private boolean checkDiagonalUpStep2(int row, int column) {
         int j = column + 1;
         int i = row - 1;
         int counter = 0;
         for (int k = 0; k < 3; i--, j++, k++) {
-            if (board[i][j].equals(piece)) {
+            if (board[i][j] == playersTurn) {
                 counter++;
             } else {
                 counter = 0;
@@ -123,12 +171,12 @@ class Board {
         return counter == 3;
     }
 
-    private boolean checkDiagonalDownStep2(int row, int column, Piece piece) {
+    private boolean checkDiagonalDownStep2(int row, int column) {
         int i = row + 1;
         int j = column + 1;
         int counter = 0;
         for (int k = 0; k < 3; i++, j++, k++) {
-            if (board[i][j].equals(piece)) {
+            if (board[i][j] == playersTurn) {
                 counter++;
             } else {
                 counter = 0;
@@ -137,15 +185,23 @@ class Board {
         return counter == 3;
     }
 
-    boolean isColumnFull(int column) {
-        return !board[0][column].isEmpty();
+    private boolean isColumnFull(int column) {
+        return board[0][column] != Chip.Blank;
     }
 
-    List<Integer> availableMoves() {
-        List<Integer> moves = new ArrayList<>();
+    boolean isGameOver() {
+        return gameOver;
+    }
+
+    Chip getWinner() {
+        return winner;
+    }
+
+    HashSet<Integer> availableMoves() {
+        HashSet<Integer> moves = new HashSet<>();
         for (int i = 0; i < COLUMNS; i++) {
             if (!isColumnFull(i)) {
-                moves.add(i+1);
+                moves.add(i + 1);
             }
         }
         return moves;

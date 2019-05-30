@@ -4,14 +4,14 @@ import java.util.List;
 class Game {
     private Board board;
     private List<Player> players;
-    private boolean gameOver;
 
-    Game() {
-        board = new Board();
+    Game(Board board) {
+        this.board = board;
         board.printBoard();
 
-        Player player1 = new UserPlayer(new Piece('X'));
-        Player player2 = new UserPlayer(new Piece('O'));
+        Player player1 = new UserPlayer(Chip.X);
+        Player player2 = new SmartPlayer(Chip.O);
+        Player player3 = new DummyPlayer(Chip.O);
 
         players = new ArrayList<>();
         players.add(player1);
@@ -19,21 +19,15 @@ class Game {
     }
 
     void play() {
-        while (!gameOver) {
+        while (!board.isGameOver()) {
             for (Player i : players) {
                 i.move(board);
                 board.printBoard();
-                if (playerWon(i)) {
-                    gameOver = true;
+                if (board.isGameOver()){
                     System.out.println(i + " won!");
-                    break;
                 }
             }
         }
-    }
-
-    boolean playerWon(Player player) {
-        return board.check(player.getPiece());
     }
 
 }
